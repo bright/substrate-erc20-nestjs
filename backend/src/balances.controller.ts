@@ -29,7 +29,7 @@ export class BalancesController {
 
   @Get(':id')
   async balanceOf(@Param() params): Promise<string> {
-    console.log('balanceof')
+    console.log('balanceof ' + params.id)
     const data = await this.balancesService.balanceOf(accounts[params.id]);
     return `${data}`;
   }

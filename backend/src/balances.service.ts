@@ -20,10 +20,6 @@ export class BalancesService implements OnModuleInit {
     const wsProvider = new WsProvider(SUBSTRATE_URL);
     this.api = await ApiPromise.create({
       provider: wsProvider,
-      types: {
-        "Address": "AccountId",
-        "LookupSource": "AccountId"
-      }
     });
 
     const abiJSONobj = (<any>metadata);
@@ -32,7 +28,6 @@ export class BalancesService implements OnModuleInit {
     // assume Alice is always the user  
     const keyring = new Keyring({ type: 'sr25519' });
     this.alice = keyring.addFromUri('//Alice', { name: 'Alice default' });
-    
   }
 
   async transfer(to: string, value: number) {
