@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Post, Put, Body } from '@nestjs/common';
-import { BalancesService } from './balances.service';
+import { Body, Controller, Get, HttpCode, Param, Put } from '@nestjs/common';
+import { ContractService } from './contract.service';
 
 // accounts list to easily intercact with the API
 const accounts = {
@@ -10,7 +10,7 @@ const accounts = {
   EVE: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
 }
 
-export class TransferDto {
+interface TransferDto {
   from?: string
   to: string
   value: number
@@ -18,26 +18,23 @@ export class TransferDto {
 
 @Controller('balances')
 export class BalancesController {
-  constructor(private readonly balancesService: BalancesService) {}
+  constructor(private readonly contractService: ContractService) { }
 
   @Get()
   async totalSupply(): Promise<string> {
-    console.log('totalSupply')
-    const data = await this.balancesService.totalSupply();
+    const data = await this.contractService.totalSupply();
     return `${data}`;
   }
 
   @Get(':id')
   async balanceOf(@Param() params): Promise<string> {
-    console.log('balanceof ' + params.id)
-    const data = await this.balancesService.balanceOf(accounts[params.id]);
+    const data = await this.contractService.balanceOf(accounts[params.id]);
     return `${data}`;
   }
 
   @Put()
-  async transfer(@Body() transferDto: TransferDto): Promise<string> {
-    console.log('transfer')
-    const data = await this.balancesService.transfer(accounts[transferDto.to], transferDto.value);
-    return `${data}`;
+  @HttpCode(202)
+  async transfer(@Body() transferDto: TransferDto) {
+    await this.contractService.transfer(accounts[transferDto.to], transferDto.value);
   }
 }
