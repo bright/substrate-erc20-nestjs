@@ -54,4 +54,20 @@ export class ContractService implements OnModuleInit {
     return result.output.toString()
   }
 
+  async allowance(owner: string, spender: string) {
+    const result: ContractCallOutcome = await this.apiContract.call('rpc', 'allowance', 0, 1000000000000, owner, spender)
+      .send(ALICE) as ContractCallOutcome
+    return result.output.toString()
+  }
+
+  async approve(spender: string, value: number) {
+    await this.api.tx.contracts.call(ERC20, 0, 1000000000000, this.abi.messages.approve(spender, value))
+      .signAndSend(this.alice, (result: SubmittableResult) => { Logger.log(result) })
+  }
+
+  async transferFrom(from: string, to: string, value: number) {
+    await this.api.tx.contracts.call(ERC20, 0, 1000000000000, this.abi.messages.transferFrom(from, to, value))
+      .signAndSend(this.alice, (result: SubmittableResult) => { Logger.log(result) })
+  }
+
 }
