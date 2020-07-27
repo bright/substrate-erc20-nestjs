@@ -11,12 +11,7 @@ const accounts = {
 }
 
 interface TransferDto {
-  to: string
-  value: number
-}
-
-interface TransferFromDto {
-  from: string
+  from?: string
   to: string
   value: number
 }
@@ -40,12 +35,11 @@ export class BalancesController {
   @Put()
   @HttpCode(202)
   async transfer(@Body() transferDto: TransferDto) {
-    await this.contractService.transfer(accounts[transferDto.to], transferDto.value);
-  }
-
-  @Put()
-  @HttpCode(202)
-  async transferFrom(@Body() transferFromDto: TransferFromDto) {
-    await this.contractService.transferFrom(accounts[transferFromDto.from], accounts[transferFromDto.to], transferFromDto.value);
+    if (transferDto.from !== undefined) {
+      await this.contractService.transferFrom(accounts[transferDto.from], accounts[transferDto.to], transferDto.value);
+    }
+    else {
+      await this.contractService.transfer(accounts[transferDto.to], transferDto.value);
+    }
   }
 }
