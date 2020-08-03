@@ -16,9 +16,9 @@ decl_event! {
         /// Token was initialized by user
 		Initialized(AccountId),
         /// Tokens successfully transferred between users
-        Transferred(AccountId, AccountId, u64), // (from, to, value)
+        Transfer(AccountId, AccountId, u64), // (from, to, value)
 		/// Allowance successfully created
-        Allowed(AccountId, AccountId, u64), // (from, to, value)
+        Approval(AccountId, AccountId, u64), // (from, to, value)
     }
 }
 
@@ -37,10 +37,10 @@ decl_error! {
 // This pallet's storage items.
 decl_storage! {
     trait Store for Module<T: Trait> as TemplateModule {
-        pub Balances get(fn get_balance): map hasher(blake2_128_concat) T::AccountId => u64;
+        pub Balances get(fn balance_of): map hasher(blake2_128_concat) T::AccountId => u64;
 		pub TotalSupply get(fn total_supply): u64 = 0;
 		Init get(fn is_init): bool;
-		pub Allowances get(fn get_allowance): map hasher(blake2_128_concat) (T::AccountId, T::AccountId) => u64;
+		pub Allowances get(fn allowance): map hasher(blake2_128_concat) (T::AccountId, T::AccountId) => u64;
     }
 }
 
@@ -72,8 +72,8 @@ decl_module! {
 			let sender = ensure_signed(_origin)?;
 			
 			// get the balance values
-			let from_balance = Self::get_balance(&sender);
-			let to_balance = Self::get_balance(&to);
+			let from_balance = Self::balance_of(&sender);
+			let to_balance = Self::balance_of(&to);
 
 			// Calculate new balances
 			let updated_from_balance = from_balance.checked_sub(value).ok_or(<Error<T>>::InsufficientFunds)?;
@@ -83,7 +83,7 @@ decl_module! {
 			<Balances<T>>::insert(&sender, updated_from_balance);
 			<Balances<T>>::insert(&to, updated_to_balance);
 
-			Self::deposit_event(RawEvent::Transferred(sender, to, value));
+			Self::deposit_event(RawEvent::Transfer(sender, to, value));
 		}
 
 		#[weight = 10_000]
@@ -92,7 +92,7 @@ decl_module! {
 			
 			<Allowances<T>>::insert((&owner, &spender), value);
 
-			Self::deposit_event(RawEvent::Allowed(owner, spender, value));
+			Self::deposit_event(RawEvent::Approval(owner, spender, value));
 		}
 
 		#[weight = 10_000]
@@ -100,11 +100,11 @@ decl_module! {
 			let spender = ensure_signed(_origin)?;
 
 			// get the balance values
-			let owner_balance = Self::get_balance(&owner);
-			let to_balance = Self::get_balance(&to);
+			let owner_balance = Self::balance_of(&owner);
+			let to_balance = Self::balance_of(&to);
 
 			// get the allowance value
-			let approved_balance = Self::get_allowance((&owner, &spender));
+			let approved_balance = Self::allowance((&owner, &spender));
 
 			// Calculate new balances
 			let updated_approved_balance = approved_balance.checked_sub(value).ok_or(<Error<T>>::InsufficientApprovedFunds)?;
@@ -118,7 +118,7 @@ decl_module! {
 			// Write new allowance to storage
 			<Allowances<T>>::insert((&owner, &spender), updated_approved_balance);
 
-			Self::deposit_event(RawEvent::Transferred(owner, to, value));
+			Self::deposit_event(RawEvent::Transfer(owner, to, value));
 		}
     }
 }
