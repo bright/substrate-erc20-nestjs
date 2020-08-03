@@ -16,7 +16,9 @@ decl_event! {
         /// Token was initialized by user
 		Initialized(AccountId),
         /// Tokens successfully transferred between users
-        Transfer(AccountId, AccountId, u64), // (from, to, value)
+        Transferred(AccountId, AccountId, u64), // (from, to, value)
+		/// Allowance successfully created
+        Allowed(AccountId, AccountId, u64), // (from, to, value)
     }
 }
 
@@ -27,6 +29,8 @@ decl_error! {
         AlreadyInitialized,
         /// Attempted to transfer more funds than were available
         InsufficientFunds,
+		/// Attempted to transfer more funds than approved
+        InsufficientApprovedFunds,
     }
 }
 
@@ -36,6 +40,7 @@ decl_storage! {
         pub Balances get(fn get_balance): map hasher(blake2_128_concat) T::AccountId => u64;
 		pub TotalSupply get(fn total_supply): u64 = 0;
 		Init get(fn is_init): bool;
+		pub Allowances get(fn get_allowance): map hasher(blake2_128_concat) (T::AccountId, T::AccountId) => u64;
     }
 }
 
@@ -66,68 +71,54 @@ decl_module! {
         pub fn transfer(_origin, to: T::AccountId, value: u64) {
 			let sender = ensure_signed(_origin)?;
 			
-			// TODO - create a private function
-			// ***** Start
-			// fn transfer_from_to(from: T::AccountId, to: T::AccountId, value: u64) -> Result {
+			// get the balance values
 			let from_balance = Self::get_balance(&sender);
 			let to_balance = Self::get_balance(&to);
 
 			// Calculate new balances
-			let updated_from_balance = from_balance.checked_sub(value).ok_or("overflow")?;
+			let updated_from_balance = from_balance.checked_sub(value).ok_or(<Error<T>>::InsufficientFunds)?;
 			let updated_to_balance = to_balance.checked_add(value).expect("Entire supply fits in u64; qed");
 
 			// Write new balances to storage
 			<Balances<T>>::insert(&sender, updated_from_balance);
 			<Balances<T>>::insert(&to, updated_to_balance);
 
-			Self::deposit_event(RawEvent::Transfer(sender, to, value));
-			//}
-			// ***** End
+			Self::deposit_event(RawEvent::Transferred(sender, to, value));
+		}
+
+		#[weight = 10_000]
+        pub fn approve(_origin, spender: T::AccountId, value: u64) {
+			let owner = ensure_signed(_origin)?;
+			
+			<Allowances<T>>::insert((&owner, &spender), value);
+
+			Self::deposit_event(RawEvent::Allowed(owner, spender, value));
+		}
+
+		#[weight = 10_000]
+        pub fn transfer_from(_origin, owner: T::AccountId, to: T::AccountId, value: u64) {
+			let spender = ensure_signed(_origin)?;
+
+			// get the balance values
+			let owner_balance = Self::get_balance(&owner);
+			let to_balance = Self::get_balance(&to);
+
+			// get the allowance value
+			let approved_balance = Self::get_allowance((&owner, &spender));
+
+			// Calculate new balances
+			let updated_approved_balance = approved_balance.checked_sub(value).ok_or(<Error<T>>::InsufficientApprovedFunds)?;
+			let updated_owner_balance = owner_balance.checked_sub(value).ok_or(<Error<T>>::InsufficientFunds)?;
+			let updated_to_balance = to_balance.checked_add(value).expect("Entire supply fits in u64; qed");
+
+			// Write new balances to storage
+			<Balances<T>>::insert(&owner, updated_owner_balance);
+			<Balances<T>>::insert(&to, updated_to_balance);
+			
+			// Write new allowance to storage
+			<Allowances<T>>::insert((&owner, &spender), updated_approved_balance);
+
+			Self::deposit_event(RawEvent::Transferred(owner, to, value));
 		}
     }
 }
-
-// impl<T: Trait> Module<T> {
-    // the ERC20 standard transfer function
-    // internal
-    // fn _transfer(
-    //     token_id: u32,
-    //     from: T::AccountId,
-    //     to: T::AccountId,
-    //     value: T::TokenBalance,
-    // ) -> Result {
-    //     ensure!(<BalanceOf<T>>::exists((token_id, from.clone())), "Account does not own this token");
-    //     let sender_balance = Self::balance_of((token_id, from.clone()));
-    //     ensure!(sender_balance >= value, "Not enough balance.");
-
-    //     let updated_from_balance = sender_balance.checked_sub(&value).ok_or("overflow in calculating balance")?;
-    //     let receiver_balance = Self::balance_of((token_id, to.clone()));
-    //     let updated_to_balance = receiver_balance.checked_add(&value).ok_or("overflow in calculating balance")?;
-        
-    //     // reduce sender's balance
-    //     <BalanceOf<T>>::insert((token_id, from.clone()), updated_from_balance);
-
-    //     // increase receiver's balance
-    //     <BalanceOf<T>>::insert((token_id, to.clone()), updated_to_balance);
-
-    //     Self::deposit_event(RawEvent::Transfer(token_id, from, to, value));
-    //     Ok(())
-    // }
-// fn transfer_from_to(from: T::AccountId, to: T::AccountId, value: u64) -> Result<(), T> {
-// 			let from_balance = Self::get_balance(&from);
-// 			let to_balance = Self::get_balance(&to);
-
-// 			// Calculate new balances
-// 			let updated_from_balance = from_balance.checked_sub(value).ok_or("overflow")?;
-// 			let updated_to_balance = to_balance.checked_add(value).expect("Entire supply fits in u64; qed");
-
-// 			// Write new balances to storage
-// 			<Balances<T>>::insert(&from, updated_from_balance);
-// 			<Balances<T>>::insert(&to, updated_to_balance);
-
-// 			Self::deposit_event(RawEvent::Transfer(from, to, value));
-// 			Ok(())
-// 		}
-
-		
-// }
