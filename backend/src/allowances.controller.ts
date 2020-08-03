@@ -1,5 +1,10 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post, Query } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 import { ContractService } from './contract.service';
+import { Erc20Service } from './erc20.service';
+import { RuntimeService } from './runtime.service';
+
 
 // accounts list to easily intercact with the API
 const accounts = {
@@ -15,13 +20,17 @@ interface AllowanceDto {
   value: number,
 }
 
-@Controller('allowances')
+@Controller(':token/allowances')
 export class AllowancesController {
-  constructor(private readonly contractService: ContractService) { }
+  tokenService: Erc20Service;
+  constructor(@Inject(REQUEST) private readonly request: Request, private readonly runtimeService: RuntimeService, private readonly contractService: ContractService) {
+    this.tokenService = request.params.token === 'runtime' ? runtimeService : contractService;
+  }
+
 
   @Get()
-  async allowance(@Query('owner') owner, @Query('spender') spender): Promise<string> {
-    const data = await this.contractService.allowance(accounts[owner], accounts[spender]);
+  async allowance(@Query('owner') owner: string, @Query('spender') spender: string): Promise<string> {
+    const data = await this.tokenService.allowance(accounts[owner], accounts[spender]);
     return `${data}`;
   }
 
@@ -29,6 +38,6 @@ export class AllowancesController {
   @HttpCode(202)
   async approve(@Body() allowanceDto: AllowanceDto) {
     console.log(allowanceDto);
-    await this.contractService.approve(accounts[allowanceDto.spender], allowanceDto.value);
+    await this.tokenService.approve(accounts[allowanceDto.spender], allowanceDto.value);
   }
 }

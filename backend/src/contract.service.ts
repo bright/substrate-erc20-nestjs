@@ -3,6 +3,7 @@ import { ApiPromise, Keyring, SubmittableResult, WsProvider } from '@polkadot/ap
 import { Abi, PromiseContract } from '@polkadot/api-contract';
 import { ContractCallOutcome } from '@polkadot/api-contract/types';
 import { KeyringPair } from '@polkadot/keyring/types';
+import { Erc20Service } from './erc20.service.js';
 import metadata from "./metadata.json";
 
 const SUBSTRATE_URL = 'ws://127.0.0.1:9944'
@@ -10,7 +11,7 @@ const ERC20 = '5DhP1rd5AEZCeZY77Zttbt293rX6tX4QnqEajEMd5i1QKsnB'
 const ALICE = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
 
 @Injectable()
-export class ContractService implements OnModuleInit {
+export class ContractService implements OnModuleInit, Erc20Service {
   private api: ApiPromise;
   private abi: Abi;
   private alice: KeyringPair;
