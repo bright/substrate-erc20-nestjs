@@ -37,10 +37,10 @@ decl_error! {
 // This pallet's storage items.
 decl_storage! {
     trait Store for Module<T: Trait> as TemplateModule {
-        pub Balances get(fn balance_of): map hasher(blake2_128_concat) T::AccountId => u64;
+        pub BalanceOf get(fn balance_of): map hasher(blake2_128_concat) T::AccountId => u64;
 		pub TotalSupply get(fn total_supply): u64 = 0;
 		Init get(fn is_init): bool;
-		pub Allowances get(fn allowance): map hasher(blake2_128_concat) (T::AccountId, T::AccountId) => u64;
+		pub Allowance get(fn allowance): map hasher(blake2_128_concat) (T::AccountId, T::AccountId) => u64;
     }
 }
 
@@ -62,7 +62,7 @@ decl_module! {
 			ensure!(!Self::is_init(), <Error<T>>::AlreadyInitialized);
 
 			TotalSupply::put(total_supply);
-			<Balances<T>>::insert(sender, total_supply);
+			<BalanceOf<T>>::insert(sender, total_supply);
 
 			Init::put(true);
 		}
@@ -80,8 +80,8 @@ decl_module! {
 			let updated_to_balance = to_balance.checked_add(value).expect("Entire supply fits in u64; qed");
 
 			// Write new balances to storage
-			<Balances<T>>::insert(&sender, updated_from_balance);
-			<Balances<T>>::insert(&to, updated_to_balance);
+			<BalanceOf<T>>::insert(&sender, updated_from_balance);
+			<BalanceOf<T>>::insert(&to, updated_to_balance);
 
 			Self::deposit_event(RawEvent::Transfer(sender, to, value));
 		}
@@ -90,7 +90,7 @@ decl_module! {
         pub fn approve(_origin, spender: T::AccountId, value: u64) {
 			let owner = ensure_signed(_origin)?;
 			
-			<Allowances<T>>::insert((&owner, &spender), value);
+			<Allowance<T>>::insert((&owner, &spender), value);
 
 			Self::deposit_event(RawEvent::Approval(owner, spender, value));
 		}
@@ -112,11 +112,11 @@ decl_module! {
 			let updated_to_balance = to_balance.checked_add(value).expect("Entire supply fits in u64; qed");
 
 			// Write new balances to storage
-			<Balances<T>>::insert(&owner, updated_owner_balance);
-			<Balances<T>>::insert(&to, updated_to_balance);
+			<BalanceOf<T>>::insert(&owner, updated_owner_balance);
+			<BalanceOf<T>>::insert(&to, updated_to_balance);
 			
 			// Write new allowance to storage
-			<Allowances<T>>::insert((&owner, &spender), updated_approved_balance);
+			<Allowance<T>>::insert((&owner, &spender), updated_approved_balance);
 
 			Self::deposit_event(RawEvent::Transfer(owner, to, value));
 		}

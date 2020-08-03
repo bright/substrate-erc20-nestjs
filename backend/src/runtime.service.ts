@@ -32,7 +32,7 @@ export class RuntimeService implements OnModuleInit, Erc20Service {
   }
 
   async balanceOf(who: string) {
-    const result = await this.api.query.templateModule.balances(who)
+    const result = await this.api.query.templateModule.balanceOf(who)
     return result
   }
 
@@ -42,7 +42,7 @@ export class RuntimeService implements OnModuleInit, Erc20Service {
   }
 
   async allowance(owner: string, spender: string) {
-    const result = await this.api.query.templateModule.allowances(owner, spender)
+    const result = await this.api.query.templateModule.allowance([owner, spender])
     return result
   }
 
