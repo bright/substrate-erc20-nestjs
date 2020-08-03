@@ -36,7 +36,7 @@ decl_error! {
 
 // This pallet's storage items.
 decl_storage! {
-    trait Store for Module<T: Trait> as TemplateModule {
+    trait Store for Module<T: Trait> as Erc20 {
         pub BalanceOf get(fn balance_of): map hasher(blake2_128_concat) T::AccountId => u64;
 		pub TotalSupply get(fn total_supply): u64 = 0;
 		Init get(fn is_init): bool;

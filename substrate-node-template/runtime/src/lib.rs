@@ -41,8 +41,8 @@ pub use frame_support::{
 	},
 };
 
-/// Importing a template pallet
-pub use template;
+/// Importing an erc20 pallet
+pub use erc20;
 
 /// Importing the contracts Schedule type.
 pub use contracts::Schedule as ContractsSchedule;
@@ -290,8 +290,8 @@ impl sudo::Trait for Runtime {
 	type Call = Call;
 }
 
-/// Used for the module template in `./template.rs`
-impl template::Trait for Runtime {
+/// Used for the module erc20 in `./erc20.rs`
+impl erc20::Trait for Runtime {
 	type Event = Event;
 }
 
@@ -309,8 +309,8 @@ construct_runtime!(
 		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: transaction_payment::{Module, Storage},
 		Sudo: sudo::{Module, Call, Config<T>, Storage, Event<T>},
-		// Used for the module template in `./template.rs`
-		TemplateModule: template::{Module, Call, Storage, Event<T>},
+		// Used for the module erc20 in `./erc20.rs`
+		Erc20: erc20::{Module, Call, Storage, Event<T>},
 		Contracts: contracts::{Module, Call, Config, Storage, Event<T>},
 	}
 );

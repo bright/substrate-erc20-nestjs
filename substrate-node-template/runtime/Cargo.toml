@@ -28,7 +28,7 @@ std = [
     'system/std',
     'timestamp/std',
     'transaction-payment/std',
-    'template/std',
+    'erc20/std',
 ]
 [dependencies.aura]
 default-features = false
@@ -188,10 +188,10 @@ package = 'frame-system'
 tag = 'v2.0.0-rc4'
 version = '2.0.0-rc4'
 
-[dependencies.template]
+[dependencies.erc20]
 default-features = false
-package = 'pallet-template'
-path = '../pallets/template'
+package = 'pallet-erc20'
+path = '../pallets/erc20'
 version = '2.0.0-rc4'
 
 [dependencies.timestamp]
