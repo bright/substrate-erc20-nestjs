@@ -62,9 +62,11 @@ decl_module! {
 			ensure!(!Self::is_init(), <Error<T>>::AlreadyInitialized);
 
 			TotalSupply::put(total_supply);
-			<BalanceOf<T>>::insert(sender, total_supply);
+			<BalanceOf<T>>::insert(&sender, total_supply);
 
 			Init::put(true);
+
+			Self::deposit_event(RawEvent::Initialized(sender));
 		}
 
 		#[weight = 10_000]
