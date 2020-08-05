@@ -2,17 +2,9 @@ import { Body, Controller, Get, HttpCode, Inject, Param, Put } from '@nestjs/com
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { ContractService } from './contract.service';
-import { Erc20Service } from './erc20.service';
+import { Erc20 } from './erc20.interface';
+import { ACCOUNTS } from './polkadot-api.service';
 import { RuntimeService } from './runtime.service';
-
-// accounts list to easily intercact with the API
-const accounts = {
-  ALICE: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-  BOB: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
-  CHARLIE: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
-  DAVE: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
-  EVE: '5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw',
-}
 
 interface TransferDto {
   from?: string
@@ -20,11 +12,11 @@ interface TransferDto {
   value: number
 }
 
-@Controller(':token/balances')
+@Controller(':service/balances')
 export class BalancesController {
-  tokenService: Erc20Service;
+  tokenService: Erc20;
   constructor(@Inject(REQUEST) private readonly request: Request, private readonly runtimeService: RuntimeService, private readonly contractService: ContractService) {
-    this.tokenService = request.params.token === 'runtime' ? runtimeService : contractService;
+    this.tokenService = request.params.service === 'runtime' ? runtimeService : contractService;
   }
 
   @Get()
@@ -35,7 +27,7 @@ export class BalancesController {
 
   @Get(':id')
   async balanceOf(@Param() params: { id: string }): Promise<string> {
-    const data = await this.tokenService.balanceOf(accounts[params.id]);
+    const data = await this.tokenService.balanceOf(ACCOUNTS[params.id]);
     return `${data}`;
   }
 
@@ -43,10 +35,10 @@ export class BalancesController {
   @HttpCode(202)
   async transfer(@Body() transferDto: TransferDto) {
     if (transferDto.from !== undefined) {
-      await this.tokenService.transferFrom(accounts[transferDto.from], accounts[transferDto.to], transferDto.value);
+      await this.tokenService.transferFrom(ACCOUNTS[transferDto.from], ACCOUNTS[transferDto.to], transferDto.value);
     }
     else {
-      await this.tokenService.transfer(accounts[transferDto.to], transferDto.value);
+      await this.tokenService.transfer(ACCOUNTS[transferDto.to], transferDto.value);
     }
   }
 }

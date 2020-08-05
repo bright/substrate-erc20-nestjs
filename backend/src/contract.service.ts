@@ -1,74 +1,44 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ApiPromise, Keyring, SubmittableResult, WsProvider } from '@polkadot/api';
-import { Abi, PromiseContract } from '@polkadot/api-contract';
+import { Injectable, Logger } from '@nestjs/common';
+import { SubmittableResult } from '@polkadot/api';
 import { ContractCallOutcome } from '@polkadot/api-contract/types';
-import { KeyringPair } from '@polkadot/keyring/types';
-import { Erc20Service } from './erc20.service.js';
-import metadata from "./metadata.json";
-
-const SUBSTRATE_URL = 'ws://127.0.0.1:9944'
-const ERC20 = '5DhP1rd5AEZCeZY77Zttbt293rX6tX4QnqEajEMd5i1QKsnB'
-const ALICE = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+import { Erc20 } from './erc20.interface';
+import { ALICE, ERC20, PolkadotApiService } from './polkadot-api.service';
 
 @Injectable()
-export class ContractService implements OnModuleInit, Erc20Service {
-  private api: ApiPromise;
-  private abi: Abi;
-  private alice: KeyringPair;
-  private apiContract: PromiseContract;
+export class ContractService implements Erc20 {
+  constructor(private readonly polkadotApiService: PolkadotApiService) { }
 
-  async onModuleInit() {
-    Logger.log('Connecting to substrate chain...');
-    const wsProvider = new WsProvider(SUBSTRATE_URL);
-    this.api = await ApiPromise.create({
-      provider: wsProvider,
-      types: {
-        "Address": "AccountId",
-        "LookupSource": "AccountId"
-      }
-    });
-
-    const abiJSONobj = (<any>metadata);
-    this.abi = new Abi(this.api.registry, abiJSONobj);
-    this.apiContract = new PromiseContract(this.api, this.abi, ERC20);
-
-    await this.api.isReady;
-
-    const keyring = new Keyring({ type: 'sr25519' });
-    this.alice = keyring.addFromUri('//Alice', { name: 'Alice default' });
-  }
-
-  async transfer(to: string, value: number) {
-    await this.api.tx.contracts.call(ERC20, 0, 1000000000000, this.abi.messages.transfer(to, value))
-      .signAndSend(this.alice, (result: SubmittableResult) => { Logger.log(result) })
+  async totalSupply() {
+    const result: ContractCallOutcome = await this.polkadotApiService.apiContract.call('rpc', 'totalSupply', 0, 1000000000000)
+      .send(ALICE) as ContractCallOutcome
+    return result.output.toString()
   }
 
   async balanceOf(who: string) {
-    const result: ContractCallOutcome = await this.apiContract.call('rpc', 'balanceOf', 0, 1000000000000, who)
+    const result: ContractCallOutcome = await this.polkadotApiService.apiContract.call('rpc', 'balanceOf', 0, 1000000000000, who)
       .send(ALICE) as ContractCallOutcome
     return result.output.toString()
   }
-
-  async totalSupply() {
-    const result: ContractCallOutcome = await this.apiContract.call('rpc', 'totalSupply', 0, 1000000000000)
-      .send(ALICE) as ContractCallOutcome
-    return result.output.toString()
+  
+  async transfer(to: string, value: number) {
+    await this.polkadotApiService.api.tx.contracts.call(ERC20, 0, 1000000000000, this.polkadotApiService.abi.messages.transfer(to, value))
+      .signAndSend(this.polkadotApiService.alice, (result: SubmittableResult) => { Logger.log(result) })
   }
 
   async allowance(owner: string, spender: string) {
-    const result: ContractCallOutcome = await this.apiContract.call('rpc', 'allowance', 0, 1000000000000, owner, spender)
+    const result: ContractCallOutcome = await this.polkadotApiService.apiContract.call('rpc', 'allowance', 0, 1000000000000, owner, spender)
       .send(ALICE) as ContractCallOutcome
     return result.output.toString()
   }
 
   async approve(spender: string, value: number) {
-    await this.api.tx.contracts.call(ERC20, 0, 1000000000000, this.abi.messages.approve(spender, value))
-      .signAndSend(this.alice, (result: SubmittableResult) => { Logger.log(result) })
+    await this.polkadotApiService.api.tx.contracts.call(ERC20, 0, 1000000000000, this.polkadotApiService.abi.messages.approve(spender, value))
+      .signAndSend(this.polkadotApiService.alice, (result: SubmittableResult) => { Logger.log(result) })
   }
 
   async transferFrom(from: string, to: string, value: number) {
-    await this.api.tx.contracts.call(ERC20, 0, 1000000000000, this.abi.messages.transferFrom(from, to, value))
-      .signAndSend(this.alice, (result: SubmittableResult) => { Logger.log(result) })
+    await this.polkadotApiService.api.tx.contracts.call(ERC20, 0, 1000000000000, this.polkadotApiService.abi.messages.transferFrom(from, to, value))
+      .signAndSend(this.polkadotApiService.alice, (result: SubmittableResult) => { Logger.log(result) })
   }
 
 }
