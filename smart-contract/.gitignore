@@ -1,5 +1,7 @@
 # Ignore build artifacts from the local tests sub-crate.
-/target/
+target/*
+!target/erc20.wasm
+!target/metadata.json
 
 # Ignore backup files creates by cargo fmt.
 **/*.rs.bk
