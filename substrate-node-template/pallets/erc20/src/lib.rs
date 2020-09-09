@@ -70,8 +70,8 @@ decl_module! {
 		}
 
 		#[weight = 10_000]
-        pub fn transfer(_origin, to: T::AccountId, value: u64) {
-			let sender = ensure_signed(_origin)?;
+        pub fn transfer(origin, to: T::AccountId, value: u64) {
+			let sender = ensure_signed(origin)?;
 			
 			// get the balance values
 			let from_balance = Self::balance_of(&sender);
@@ -89,8 +89,8 @@ decl_module! {
 		}
 
 		#[weight = 10_000]
-        pub fn approve(_origin, spender: T::AccountId, value: u64) {
-			let owner = ensure_signed(_origin)?;
+        pub fn approve(origin, spender: T::AccountId, value: u64) {
+			let owner = ensure_signed(origin)?;
 			
 			<Allowance<T>>::insert((&owner, &spender), value);
 
@@ -98,8 +98,8 @@ decl_module! {
 		}
 
 		#[weight = 10_000]
-        pub fn transfer_from(_origin, owner: T::AccountId, to: T::AccountId, value: u64) {
-			let spender = ensure_signed(_origin)?;
+        pub fn transfer_from(origin, owner: T::AccountId, to: T::AccountId, value: u64) {
+			let spender = ensure_signed(origin)?;
 
 			// get the balance values
 			let owner_balance = Self::balance_of(&owner);

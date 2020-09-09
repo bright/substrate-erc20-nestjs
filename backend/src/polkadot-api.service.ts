@@ -42,6 +42,6 @@ export class PolkadotApiService implements OnModuleInit {
     await this.api.isReady;
 
     const keyring = new Keyring({ type: 'sr25519' });
-    this.alice = keyring.addFromUri('//Charlie', { name: 'Charlie default' });
+    this.alice = keyring.addFromUri('//Alice', { name: 'Alice default' });
   }
 }
