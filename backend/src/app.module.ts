@@ -4,10 +4,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BalancesController } from './balances.controller';
 import { ContractService } from './contract.service';
+import { PolkadotApiService } from './polkadot-api.service';
+import { RuntimeService } from './runtime.service';
 
 @Module({
   imports: [],
   controllers: [AppController, BalancesController, AllowancesController],
-  providers: [AppService, ContractService],
+  providers: [AppService, PolkadotApiService, ContractService, RuntimeService],
 })
 export class AppModule { }
