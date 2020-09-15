@@ -3,10 +3,10 @@ import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { ContractService } from './contract.service';
 import { Erc20 } from './erc20.interface';
-import { ACCOUNTS } from './polkadot-api.service';
 import { RuntimeService } from './runtime.service';
 
 interface AllowanceDto {
+  sender: string,
   spender: string,
   value: number,
 }
@@ -20,13 +20,13 @@ export class AllowancesController {
 
   @Get()
   async allowance(@Query('owner') owner: string, @Query('spender') spender: string): Promise<string> {
-    const data = await this.tokenService.allowance(ACCOUNTS[owner], ACCOUNTS[spender]);
+    const data = await this.tokenService.allowance(owner, spender);
     return `${data}`;
   }
 
   @Post()
   @HttpCode(202)
   async approve(@Body() allowanceDto: AllowanceDto) {
-    await this.tokenService.approve(ACCOUNTS[allowanceDto.spender], allowanceDto.value);
+    await this.tokenService.approve(allowanceDto.sender, allowanceDto.spender, allowanceDto.value);
   }
 }

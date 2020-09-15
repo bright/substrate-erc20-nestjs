@@ -1,8 +1,8 @@
 export interface Erc20 {
   totalSupply();
   balanceOf(who: string);
-  transfer(to: string, value: number);
+  transfer(sender: string, to: string, value: number);
   allowance(owner: string, spender: string);
-  approve(spender: string, value: number);
-  transferFrom(from: string, to: string, value: number);
+  approve(sender: string, spender: string, value: number);
+  transferFrom(sender: string, from: string, to: string, value: number);
 }

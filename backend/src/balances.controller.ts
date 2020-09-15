@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Param, Put, HttpException, HttpStatus } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { ContractService } from './contract.service';
@@ -7,6 +7,7 @@ import { ACCOUNTS } from './polkadot-api.service';
 import { RuntimeService } from './runtime.service';
 
 interface TransferDto {
+  sender: string,
   from?: string
   to: string
   value: number
@@ -34,11 +35,16 @@ export class BalancesController {
   @Put()
   @HttpCode(202)
   async transfer(@Body() transferDto: TransferDto) {
-    if (transferDto.from !== undefined) {
-      await this.tokenService.transferFrom(ACCOUNTS[transferDto.from], ACCOUNTS[transferDto.to], transferDto.value);
+    try {
+      if (transferDto.from !== undefined) {
+        await this.tokenService.transferFrom(transferDto.sender, transferDto.from, transferDto.to, transferDto.value);
+      }
+      else {
+        await this.tokenService.transfer(transferDto.sender, transferDto.to, transferDto.value);
+      }
     }
-    else {
-      await this.tokenService.transfer(ACCOUNTS[transferDto.to], transferDto.value);
+    catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST)
     }
   }
 }
